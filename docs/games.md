@@ -1108,7 +1108,7 @@ glightbox: false
   // appid list is kept, in localStorage rather than a cookie - a real
   // library is thousands of ids, far past the ~4KB cookie limit.
   // ===================================================================
-  const STEAM_WORKER = 'https://steam-api.portmaster.workers.dev';
+  const STEAM_WORKER = 'https://steam-api.portmaster-team.workers.dev';
   const STEAM_STORAGE_KEY = 'pm_steam_library';
 
   const steamUserInput = document.getElementById('steamUserInput');

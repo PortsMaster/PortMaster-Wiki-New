@@ -1,0 +1,8 @@
+{
+  // Deployed as its own Worker by Workers Builds, with this folder
+  // (workers/steam-api) as the build's root directory. Must match the
+  // Worker's name in the Cloudflare dashboard.
+  "name": "steam-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01"
+}
