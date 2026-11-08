@@ -1,0 +1,7 @@
+# Build output: Cloudflare runs `mkdocs build` itself on every deploy
+# (see wrangler.jsonc), so the generated site is never committed.
+site/
+
+# Python bytecode cache, created whenever main.py runs.
+__pycache__/
+*.pyc
