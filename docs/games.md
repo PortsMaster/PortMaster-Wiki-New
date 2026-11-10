@@ -31,7 +31,7 @@ glightbox: false
 .md-header label.md-header__button[for="__search"] { display: none; }
 </style>
 
-{% macro port_card(port_key) %}
+{% macro port_card(port_key, weekly=false) %}
 {% set port = ports.ports[port_key] %}
 {% if port %}
 {% set port_id = port_key.replace('.zip', '') %}
@@ -55,10 +55,18 @@ glightbox: false
     {% endif %}
     <h3>{{ title }}</h3>
     <div class="card-stats">
+      {% if weekly and weekly_downloads is not none %}
+      {% set this_week = weekly_downloads[port_key] | default(0) %}
+      <span class="card-stat" title="Downloads in the last 7 days">
+        <i class="bi bi-graph-up-arrow"></i>
+        {{ "{:,}".format(this_week) }} this week
+      </span>
+      {% else %}
       <span class="card-stat">
         <i class="bi bi-download"></i>
         {% if downloads > 0 %}{{ "{:,}".format(downloads) }}{% else %}—{% endif %}
       </span>
+      {% endif %}
       <span class="card-stat">
         <i class="bi bi-calendar-plus"></i>
         {{ date_added or '—' }}
@@ -71,7 +79,7 @@ glightbox: false
 {# Unified carousel section: title (+ inline "See All") on the left, prev/next
    arrows on the right - one shared layout for every carousel, standalone or
    nested inside a category, so they all look and behave the same way. #}
-{% macro carousel_block(level, title, track_id, port_keys) %}
+{% macro carousel_block(level, title, track_id, port_keys, weekly=false) %}
 <div class="featured-group">
   <div class="carousel-section-header">
     <div class="carousel-section-title">
@@ -91,7 +99,7 @@ glightbox: false
   </div>
   <div class="carousel-container">
     <div class="carousel-track" id="{{ track_id }}">
-      {% for port_key in port_keys %}{{ port_card(port_key) }}{% endfor %}
+      {% for port_key in port_keys %}{{ port_card(port_key, weekly) }}{% endfor %}
     </div>
   </div>
 </div>
@@ -217,7 +225,11 @@ glightbox: false
 </div>
 
 <div class="featured-category">
+  {% if weekly_downloads is not none %}
+  {{ carousel_block(1, 'Popular', 'popularPortsCarousel', sorted_orders['trending'][:20], true) }}
+  {% else %}
   {{ carousel_block(1, 'Popular Ports', 'popularPortsCarousel', sorted_orders['downloads'][:20]) }}
+  {% endif %}
 </div>
 
 {# A grid of image tiles, not another card carousel - a deliberate change
@@ -310,6 +322,7 @@ glightbox: false
               <div class="sort-option" data-sort="az">A-Z</div>
               <div class="sort-option" data-sort="za">Z-A</div>
               <div class="sort-option selected" data-sort="downloads">Most Downloads</div>
+              {% if weekly_downloads is not none %}<div class="sort-option" data-sort="weekly">Popular</div>{% endif %}
               <div class="sort-option" data-sort="date-added">Date Added (Newest)</div>
               <div class="sort-option" data-sort="date-updated">Date Updated (Newest)</div>
             </div>
@@ -916,6 +929,8 @@ glightbox: false
     else if (mode === 'za') arr.sort((a, b) => b.title.localeCompare(a.title));
     else if (mode === 'date-updated') arr.sort((a, b) => (b.dateUpdated || '').localeCompare(a.dateUpdated || ''));
     else if (mode === 'date-added') arr.sort((a, b) => (b.dateAdded || '').localeCompare(a.dateAdded || ''));
+    // Downloads over the last 7 days (main.py), all-time as tie-break.
+    else if (mode === 'weekly') arr.sort((a, b) => ((b.weeklyDownloads || 0) - (a.weeklyDownloads || 0)) || (b.downloads - a.downloads));
     else arr.sort((a, b) => b.downloads - a.downloads);
     sortedCache[mode] = arr.map(p => p.id);
     return sortedCache[mode];
@@ -1590,8 +1605,13 @@ glightbox: false
       ? `<img class="off-glb" src="https://raw.githubusercontent.com/${port.repo}/refs/heads/main/ports/${port.id}/${port.screenshot}" alt="${escapeHtml(port.title)}" loading="lazy" onload="this.classList.add('is-loaded')" onerror="this.style.display='none'">`
       : '';
     const downloadsText = port.downloads > 0 ? port.downloads.toLocaleString() : '—';
+    // Sorted by this week's downloads, the card shows that number instead.
+    const showWeekly = currentSort === 'weekly' && port.weeklyDownloads !== undefined;
+    const downloadStat = showWeekly
+      ? `<span class="card-stat" title="Downloads in the last 7 days"><i class="bi bi-graph-up-arrow"></i> ${port.weeklyDownloads.toLocaleString()} this week</span>`
+      : `<span class="card-stat"><i class="bi bi-download"></i> ${downloadsText}</span>`;
     const cls = 'pm-card' + (port.incompatibleFlag ? ' incompatible' : '');
-    return `<div class="${cls}" data-port-id="${port.id}">${rtrBadge}${ownedBadge}${img}<h3>${escapeHtml(port.title)}</h3><div class="card-stats"><span class="card-stat"><i class="bi bi-download"></i> ${downloadsText}</span><span class="card-stat"><i class="bi bi-calendar-plus"></i> ${port.dateAdded || '—'}</span></div></div>`;
+    return `<div class="${cls}" data-port-id="${port.id}">${rtrBadge}${ownedBadge}${img}<h3>${escapeHtml(port.title)}</h3><div class="card-stats">${downloadStat}<span class="card-stat"><i class="bi bi-calendar-plus"></i> ${port.dateAdded || '—'}</span></div></div>`;
   }
 
   function renderPage(matchedIds, supported = 0, unsupported = 0) {

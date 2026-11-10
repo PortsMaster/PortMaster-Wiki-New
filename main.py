@@ -75,6 +75,39 @@ def download_github_json(url, local_path):
         print(f"✗ Failed to download {url}: {e}", flush=True)
         return False
 
+
+# "Popular This Week": port_stats.json only holds all-time totals, but
+# PortMaster-Info's git history keeps a copy for every update. The copy from
+# about a week ago, subtracted from today's, gives each port's downloads over
+# the last 7 days.
+WEEKLY_STATS_DAYS = 7
+WEEKLY_STATS_FILE = "port_stats_week_ago.json"
+
+
+def download_week_old_stats(base_path):
+    until = (datetime.utcnow() - timedelta(days=WEEKLY_STATS_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    api = ("https://api.github.com/repos/PortsMaster/PortMaster-Info/commits"
+           f"?path=port_stats.json&until={until}&per_page=1")
+    headers = {"User-Agent": "portmaster-wiki-build", "Accept": "application/vnd.github+json"}
+    try:
+        with urllib.request.urlopen(urllib.request.Request(api, headers=headers), timeout=20) as r:
+            commits = json.load(r)
+        if not commits:
+            raise ValueError("no commit that old")
+        sha = commits[0]["sha"]
+        date = commits[0]["commit"]["committer"]["date"]
+        raw = f"https://raw.githubusercontent.com/PortsMaster/PortMaster-Info/{sha}/port_stats.json"
+        with urllib.request.urlopen(urllib.request.Request(raw, headers=headers), timeout=20) as r:
+            old = json.load(r)
+    except (urllib.error.URLError, ValueError, KeyError, json.JSONDecodeError) as e:
+        # Keep whatever snapshot is already on disk; without one the row
+        # just falls back to all-time downloads.
+        print(f"✗ Week-old download stats unavailable ({e}); keeping the existing snapshot", flush=True)
+        return
+    with (base_path / WEEKLY_STATS_FILE).open("w", encoding="utf-8") as f:
+        json.dump({"date": date, "ports": old.get("ports", {})}, f, separators=(",", ":"))
+    print(f"✓ Week-old download stats from {date}", flush=True)
+
 def download_portmaster_jsons(base_path):
     """Download all PortMaster JSON files from GitHub"""
     # Use latest releases
@@ -333,6 +366,7 @@ def define_env(env):
         print("FAST_BUILD=1: skipping GitHub JSON downloads, using local files as-is.", flush=True)
     else:
         download_portmaster_jsons(base_path)
+        download_week_old_stats(base_path)
 
     ports_files = [
         base_path / "ports.json",
@@ -429,6 +463,21 @@ def define_env(env):
 
     env.variables["port_stats"] = port_stats
 
+    # Downloads over the last week, per port (see download_week_old_stats).
+    # A port missing from the old snapshot is new this week, so all of its
+    # downloads count. Negative differences (the totals occasionally jump
+    # back) count as zero. None when no snapshot exists.
+    weekly_downloads = None
+    week_old_path = base_path / WEEKLY_STATS_FILE
+    if week_old_path.exists():
+        with week_old_path.open(encoding="utf-8") as f:
+            week_old = json.load(f).get("ports", {})
+        weekly_downloads = {
+            key: max(0, total - week_old.get(key, 0))
+            for key, total in port_stats.get("ports", {}).items()
+        }
+    env.variables["weekly_downloads"] = weekly_downloads
+
     # Build a lean per-port data file for the standalone port page
     # (/port/#<id>). This intentionally ships far less than ports.json
     # (which is 2MB+ and includes fields like items/store/md5 that the page
@@ -505,6 +554,9 @@ def define_env(env):
                 "arch": attr.get("arch") or [],
                 "rtr": bool(attr.get("rtr")),
                 "downloads": port_stats.get("ports", {}).get(key, 0),
+                # Left out entirely (not 0) when there's no week-old
+                # snapshot, so the page can tell "no data" from "no downloads".
+                **({"weeklyDownloads": weekly_downloads.get(key, 0)} if weekly_downloads is not None else {}),
                 "dateAdded": source.get("date_added") or "",
                 "dateUpdated": source.get("date_updated") or "",
                 "url": source_url,
@@ -710,6 +762,13 @@ def define_env(env):
         "az": sorted(port_keys, key=get_title),
         "za": sorted(port_keys, key=get_title, reverse=True),
         "downloads": sorted(port_keys, key=get_downloads, reverse=True),
+        # Most downloads in the last week, all-time downloads as tie-break;
+        # just all-time when there's no week-old snapshot.
+        "trending": sorted(
+            port_keys,
+            key=lambda k: ((weekly_downloads or {}).get(k, 0), get_downloads(k)),
+            reverse=True,
+        ),
         "date-added": sorted(port_keys, key=get_date_added, reverse=True),
         "date-updated": sorted(port_keys, key=get_date_updated, reverse=True),
     }
