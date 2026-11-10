@@ -931,9 +931,14 @@ glightbox: false
     loadSteamLibrary();
     updateSteamUI();
 
+    // Only the typo-tolerant last tier of searchRanking() below. On its own
+    // (threshold 0.4, results in browse order) a short query like "nox"
+    // matched 73 ports and buried Nox-Decomp at #30.
     fuse = new Fuse(allPorts, {
       keys: [{ name: 'title', weight: 0.6 }, { name: 'genres', weight: 0.1 }],
-      threshold: 0.4
+      threshold: 0.3,
+      ignoreLocation: true,
+      includeScore: true
     });
 
     // Populate genre checkbox list
@@ -1480,6 +1485,43 @@ glightbox: false
     return true;
   }
 
+  // ===== Search ranking =====
+  // Lowercase, accents and punctuation removed, so "Nox-Decomp" and
+  // "nox decomp", or "Pokémon" and "pokemon", compare equal.
+  function normalizeTitle(text) {
+    return String(text || '').toLowerCase().normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  // Map of port id -> rank (lower is better) for every port matching the
+  // query. Tiers: exact title, title starts with it, a word in the title
+  // starts with it, title contains it, then fuzzy matches for typos. Fuzzy
+  // only kicks in from 4 characters - below that it mostly adds noise.
+  const FUZZY_MIN_LENGTH = 4;
+  function searchRanking(query) {
+    const q = normalizeTitle(query);
+    const ranks = new Map();
+    if (!q) return ranks;
+
+    allPorts.forEach(port => {
+      const title = normalizeTitle(port.title || port.id);
+      let tier = null;
+      if (title === q) tier = 0;
+      else if (title.startsWith(q)) tier = 1;
+      else if ((' ' + title).includes(' ' + q)) tier = 2;
+      else if (title.replace(/ /g, '').includes(q.replace(/ /g, ''))) tier = 3;
+      if (tier !== null) ranks.set(port.id, tier);
+    });
+
+    if (q.length >= FUZZY_MIN_LENGTH) {
+      fuse.search(query).forEach(r => {
+        if (!ranks.has(r.item.id)) ranks.set(r.item.id, 4 + (r.score || 0));
+      });
+    }
+    return ranks;
+  }
+
   // ===== Filter + search + render =====
   function filterAndSearch(resetPage = true) {
     if (!allPorts) return;
@@ -1487,7 +1529,7 @@ glightbox: false
     const query = gamesSearchInput.value.trim();
     const readyOnly = readyToggle.checked;
     const hideIncompatible = hideIncompatibleToggle.checked;
-    const searchMatches = query ? new Set(fuse.search(query).map(r => r.item.id)) : null;
+    const searchMatches = query ? searchRanking(query) : null;
 
     let supported = 0, unsupported = 0;
     const order = getSortedIds(currentSort);
@@ -1525,6 +1567,12 @@ glightbox: false
         matchedIds.push(id);
       }
     });
+
+    // While searching, best matches come first; the chosen sort still
+    // orders ports within the same tier (sort is stable).
+    if (searchMatches) {
+      matchedIds.sort((a, b) => searchMatches.get(a) - searchMatches.get(b));
+    }
 
     if (resetPage) currentPage = 1;
     renderPage(matchedIds, supported, unsupported);
