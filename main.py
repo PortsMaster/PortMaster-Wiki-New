@@ -945,7 +945,52 @@ def add_cache_busting(site_dir):
     print(f"cache busting: versioned {len(versions)} assets in {changed} pages", flush=True)
 
 
+# Ports in the site search. The theme's search box only knows about built
+# pages, and every port shares the one /port/ page, so after the build one
+# entry per port is appended to the theme's own search index. The search UI
+# is untouched: a port shows up as a normal result linking to its port page.
+PORT_SEARCH_BOOST = 1.5      # docs entries default to 1, so ports rank first
+PORT_SEARCH_DESC_LEN = 200
+
+
+def add_ports_to_search(site_dir):
+    site_dir = Path(site_dir)
+    index_path = site_dir / "search" / "search_index.json"
+    details_path = site_dir / "assets" / "json" / "port_details.json"
+    if not index_path.exists() or not details_path.exists():
+        return
+
+    index = json.loads(index_path.read_text(encoding="utf-8"))
+    details = json.loads(details_path.read_text(encoding="utf-8"))
+
+    entries = []
+    for port_id, port in details.items():
+        desc = _plain_text(re.sub(r"<[^>]+>", " ", port.get("descHtml") or ""))
+        if len(desc) > PORT_SEARCH_DESC_LEN:
+            desc = desc[:PORT_SEARCH_DESC_LEN].rsplit(" ", 1)[0] + "…"
+        meta = ["Port"]
+        meta += [g.title() if g != "fps" else "FPS" for g in (port.get("genres") or [])]
+        meta.append("Ready to Run" if port.get("rtr") else "Files required")
+        porters = port.get("porter") or []
+        if porters:
+            meta.append("by " + ", ".join(porters))
+        entries.append({
+            "location": f"port/?name={port_id}",
+            "title": port.get("title") or port_id,
+            # One paragraph: the theme only shows the paragraphs of a result
+            # that contain the search term, so a separate label line got
+            # dropped from most results.
+            "text": f"<p>{' · '.join(meta)}. {desc}</p>",
+            "boost": PORT_SEARCH_BOOST,
+        })
+
+    index["docs"].extend(entries)
+    index_path.write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    print(f"search: added {len(entries)} ports to the search index", flush=True)
+
+
 def on_post_build(env):
+    add_ports_to_search(env.conf["site_dir"])
     add_cache_busting(env.conf["site_dir"])
     if _config_done_time is not None:
         print(f"on_post_build reached {time.time() - _config_done_time:.1f}s after define_env finished (covers markdown->HTML + theme templating + search indexing for every page)", flush=True)

@@ -23,7 +23,13 @@ glightbox: false
 </div>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.1.0/dist/fuse.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<style>.md-path { display: none; }</style>
+<style>
+.md-path { display: none; }
+/* This page has its own port search above the grid, so the header search
+   (and its mobile search icon) would be a second search box here. */
+.md-header .md-search,
+.md-header label.md-header__button[for="__search"] { display: none; }
+</style>
 
 {% macro port_card(port_key) %}
 {% set port = ports.ports[port_key] %}
