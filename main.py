@@ -1,3 +1,4 @@
+import hashlib
 import json
 import markdown
 import os
@@ -912,6 +913,39 @@ def on_post_page_macros(env):
             print(f"    -> {env.page.file.src_path} took {elapsed:.1f}s", flush=True)
 
 
+# Our own stylesheets and scripts keep the same file name from build to
+# build (unlike the theme's hashed bundles), so browsers kept serving stale
+# copies after a change - e.g. the header Donate button showing unstyled.
+# After the build, every reference to one of them in the generated HTML gets
+# ?v=<hash of the file>, which only changes when the file itself does.
+CACHE_BUSTED_DIRS = ("assets/stylesheets", "javascripts")
+
+
+def add_cache_busting(site_dir):
+    site_dir = Path(site_dir)
+    versions = {}
+    for folder in CACHE_BUSTED_DIRS:
+        for f in (site_dir / folder).glob("*"):
+            if f.suffix in (".css", ".js"):
+                digest = hashlib.md5(f.read_bytes()).hexdigest()[:10]
+                versions[f"{folder}/{f.name}"] = digest
+    if not versions:
+        return
+
+    pattern = re.compile(
+        r'((?:href|src)="(?:[^"]*/)?)(' + "|".join(re.escape(k) for k in versions) + r')"'
+    )
+    changed = 0
+    for page in site_dir.rglob("*.html"):
+        text = page.read_text(encoding="utf-8")
+        new_text = pattern.sub(lambda m: f'{m.group(1)}{m.group(2)}?v={versions[m.group(2)]}"', text)
+        if new_text != text:
+            page.write_text(new_text, encoding="utf-8")
+            changed += 1
+    print(f"cache busting: versioned {len(versions)} assets in {changed} pages", flush=True)
+
+
 def on_post_build(env):
+    add_cache_busting(env.conf["site_dir"])
     if _config_done_time is not None:
         print(f"on_post_build reached {time.time() - _config_done_time:.1f}s after define_env finished (covers markdown->HTML + theme templating + search indexing for every page)", flush=True)
