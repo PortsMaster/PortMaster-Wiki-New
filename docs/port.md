@@ -64,7 +64,7 @@ glightbox: false
     <!-- Title block sits above both columns, store-page style: back link,
          big title, then a thin meta line (status + porter). -->
     <div class="port-titlebar">
-      <a href="../games/" class="port-breadcrumb"><i class="bi bi-arrow-left"></i> All games</a>
+      <a href="../games/" class="port-breadcrumb" id="port-back" aria-label="Back" title="Back"><i class="bi bi-arrow-left"></i></a>
       <h1 class="port-title" id="port-title"></h1>
       <div class="port-title-meta">
         <span class="port-title-porter" id="port-title-porter"></span>

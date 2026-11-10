@@ -10,6 +10,22 @@
   let activePortId = null;
   const readmeCache = {};
 
+  // Back arrow: return to wherever the visitor came from on this site (a
+  // filtered Browse page, a carousel, search results...). Opened directly
+  // from a shared link or another site, there's nothing to go back to, so
+  // it falls back to its href, the games page.
+  const backLink = document.getElementById('port-back');
+  if (backLink) {
+    backLink.addEventListener('click', e => {
+      let sameSite = false;
+      try { sameSite = new URL(document.referrer).origin === location.origin; } catch (err) { /* no referrer */ }
+      if (sameSite && history.length > 1) {
+        e.preventDefault();
+        history.back();
+      }
+    });
+  }
+
   // URL scheme matches the legacy portmaster.games detail page
   // (detail.html?name=<port_id>) so old bookmarks/shares keep working.
   function getPortIdFromUrl() {
