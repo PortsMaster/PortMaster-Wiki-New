@@ -9,13 +9,36 @@ Workers.
 
 ## Running it locally
 
-Install the build dependencies once (Python 3):
+### What you need
+
+- **Git**, to clone the repo.
+- **Python 3** with **pip**. On Debian/Ubuntu: `sudo apt install python3 python3-pip python3-venv`.
+  On Windows/macOS, use the installer from [python.org](https://www.python.org/downloads/).
+
+### Install the Python packages
+
+Do this once, from the repo folder. A virtual environment keeps the packages out of
+your system Python. It's optional, but recent Linux distributions refuse a plain
+system-wide `pip install`.
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install mkdocs-material mkdocs-glightbox mkdocs-macros-plugin pillow
 ```
 
-Build and serve the site:
+| Package | What it's for |
+|---|---|
+| `mkdocs-material` | MkDocs itself plus the Material theme |
+| `mkdocs-macros-plugin` | runs `main.py` and fills in the `{{ ... }}` template tags in pages |
+| `mkdocs-glightbox` | click-to-zoom for images |
+| `pillow` | image checks for the homepage mosaic. Optional: the build works without it. |
+
+These are the same packages Cloudflare installs for its builds (see `wrangler.jsonc`).
+If you used a virtual environment, run `source .venv/bin/activate` again in each new
+terminal before building.
+
+### Build and serve
 
 ```bash
 FAST_BUILD=1 mkdocs build
@@ -173,10 +196,5 @@ A site update starts when any of these happens:
 The schedule is in `worker/scheduled.js`. It starts builds through a deploy
 hook stored as the `DEPLOY_HOOK_URL` secret on the Worker.
 
-Secrets live in Cloudflare, never in this repo:
-
-- `DEPLOY_HOOK_URL` on `portmaster-wiki`
-- `steam_api` (the Steam Web API key) on `steam-api`
-
-If the site is served from a new domain, add that domain to `ALLOWED_ORIGINS`
-in `workers/steam-api/src/index.js`, or the Steam check won't work from it.
+The secrets for the scheduled rebuilds and the Steam API key are stored in
+Cloudflare, not in this repo.
