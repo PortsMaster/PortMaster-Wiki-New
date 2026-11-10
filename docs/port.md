@@ -91,6 +91,7 @@ glightbox: false
           <p class="port-status-note" id="port-status-note"></p>
 
           <a href="#" class="modal-download-btn port-download-cta" id="port-download-btn">Download</a>
+          <p class="port-donate-note">Enjoying PortMaster? <a href="https://opencollective.com/portmaster" target="_blank" rel="noopener">Support the project</a></p>
 
           <div class="device-chip-wrapper">
             <button type="button" class="device-filter-btn" id="device-chip-btn" title="Check compatibility with your device">

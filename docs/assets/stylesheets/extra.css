@@ -335,3 +335,58 @@ img.no-lightbox {
 .game-card img {
   pointer-events: none !important;
 }
+/* ===== Header Donate button (overrides/partials/source.html) =====
+   Sits in Material's .md-header__source slot next to the GitHub widget.
+   The theme hides that whole slot below 960px; here it stays visible so
+   Donate shows on phones too, but the GitHub widget itself is dropped
+   there since the two don't fit side by side. */
+.md-header__source {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: auto;
+}
+
+/* The same partial also renders at the top of the mobile navigation
+   drawer (.md-nav__source); the Donate button is already in the header
+   there, so only the GitHub widget stays in the drawer. */
+.md-nav__source .md-header-donate {
+  display: none;
+}
+
+@media screen and (max-width: 59.984375em) {
+  .md-header__source .md-source {
+    display: none;
+  }
+
+  .md-header__source {
+    margin-left: 0.4rem;
+  }
+}
+
+.md-header-donate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background-color: #F49519;
+  color: #ffffff !important;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.md-header-donate:hover {
+  background-color: #e0850f;
+  transform: translateY(-1px);
+}
+
+.md-header-donate__icon svg {
+  width: 0.8rem;
+  height: 0.8rem;
+  fill: currentColor;
+}

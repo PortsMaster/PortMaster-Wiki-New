@@ -876,3 +876,17 @@
     height: 44px;
   }
 }
+
+/* Quiet donate prompt under the Download button - small enough not to
+   compete with it. */
+.port-sidebar .port-donate-note {
+  margin: 0.5rem 0 0;
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.port-sidebar .port-donate-note a {
+  color: #F49519;
+  font-weight: 600;
+}

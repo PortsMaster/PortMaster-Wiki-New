@@ -162,7 +162,7 @@
 }
 
 .get-involved-grid {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .stats-card,
@@ -205,6 +205,28 @@
   font-size: 0.88rem;
   color: var(--md-default-fg-color--light);
   margin: 0 0 1.25rem;
+}
+
+/* The card texts differ in length; letting the text grow pins every
+   button to the bottom of its card, so buttons side by side line up. */
+.get-involved-card p {
+  flex-grow: 1;
+}
+
+/* Too narrow for three across: two on top, Support centred underneath at
+   the same width as one of the cards above it. Real phones (480px and
+   below) keep it full width. */
+@media (min-width: 481px) and (max-width: 1100px) {
+  .get-involved-grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 2rem;
+  }
+
+  .get-involved-card--support {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: 50%;
+  }
 }
 
 /* ===== Showcase =====
@@ -381,10 +403,15 @@
     margin-top: 0.25rem;
   }
 
-  /* Both cards stay side by side too. */
+  /* Discord and GitHub stay side by side; the Support card takes the
+     full row underneath, since three columns are too narrow on a phone. */
   .get-involved-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
+    gap: 1.5rem 0.75rem;
+  }
+
+  .get-involved-card--support {
+    grid-column: 1 / -1;
   }
 
   .get-involved-card {

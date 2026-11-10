@@ -99,6 +99,12 @@ hide:
       <p>PortMaster is open-source and built by a passionate global community. Help make handheld gaming accessible for everyone.</p>
       <a href="https://github.com/PortsMaster/PortMaster-New" class="hero-btn hero-btn-secondary">View on GitHub</a>
     </div>
+    <div class="get-involved-card get-involved-card--support">
+      <i class="bi bi-heart-fill get-involved-icon"></i>
+      <h3>Support PortMaster</h3>
+      <p>PortMaster is free and run by volunteers. Donations pay for servers and the test hardware we port on.</p>
+      <a href="https://opencollective.com/portmaster" class="hero-btn hero-btn-primary" target="_blank" rel="noopener">Donate</a>
+    </div>
   </div>
 </section>
 
