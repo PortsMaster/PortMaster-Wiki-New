@@ -118,7 +118,10 @@ extra:
       link: https://x.com/PortMasterLinux
     - icon: fontawesome/solid/heart
       link: https://opencollective.com/portmaster
-  favicon: assets/images/logo.ico  
+  # Round PM logo, 192x192: Google wants a square icon of at least 48px
+  # (multiples of 48) for the site icon in search results. docs/favicon.ico
+  # is the same logo for anything that asks for /favicon.ico directly.
+  favicon: assets/images/favicon.png
 extra_javascript:
   - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
   - javascripts/tablesort.js
