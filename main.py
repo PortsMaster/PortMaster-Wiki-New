@@ -989,7 +989,70 @@ def add_ports_to_search(site_dir):
     print(f"search: added {len(entries)} ports to the search index", flush=True)
 
 
+# Pages of the previous portmaster.games site, so old links and bookmarks
+# (and the PortMaster app, which links installation.html) land on the new
+# equivalent. old file -> (new path, query parameters to rename). The query
+# string is kept, e.g. detail.html?name=retrobowl -> port/?name=retrobowl.
+OLD_URL_REDIRECTS = {
+    "detail.html":             ("port/", {}),
+    "porter-profile.html":     ("porter/", {"porter": "name"}),
+    "games.html":              ("games/", {}),
+    "games_fuse.html":         ("games/", {}),
+    "installation.html":       ("installation/installing-portmaster/", {}),
+    "supported-devices.html":  ("installation/supported-handhelds/", {}),
+    "runtimes.html":           ("installation/runtimes/", {}),
+    "faq.html":                ("faq/", {}),
+    "porting.html":            ("contribute/", {}),
+    "port-tools.html":         ("contribute/", {}),
+    "packaging.html":          ("contribute/porting/packaging/", {}),
+    "build-environments.html": ("contribute/porting/build-environments/", {}),
+    "developer-details.html":  ("contribute/porting/developer-details/", {}),
+    "port-json.html":          ("tools/json-generator/", {}),
+    "port-markdown.html":      ("tools/markdown-generator/", {}),
+    "metadata-editor.html":    ("tools/gameinfo-generator/", {}),
+    "themes.html":             ("contribute/gui/theme-engine/", {}),
+}
+
+_REDIRECT_PAGE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Redirecting…</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="{target}">
+<script>
+(function () {{
+  var params = new URLSearchParams(location.search);
+  var renames = {renames};
+  Object.keys(renames).forEach(function (from) {{
+    if (params.has(from)) {{ params.set(renames[from], params.get(from)); params.delete(from); }}
+  }});
+  var query = params.toString();
+  location.replace("{target}" + (query ? "?" + query : "") + location.hash);
+}})();
+</script>
+<noscript><meta http-equiv="refresh" content="0; url={target}"></noscript>
+</head>
+<body><p>This page has moved to <a href="{target}">{target}</a>.</p></body>
+</html>
+"""
+
+
+def write_old_url_redirects(site_dir):
+    site_dir = Path(site_dir)
+    for old, (target, renames) in OLD_URL_REDIRECTS.items():
+        # Never overwrite a real page the site itself built at that path.
+        if (site_dir / old).exists():
+            continue
+        (site_dir / old).write_text(
+            _REDIRECT_PAGE.format(target=target, renames=json.dumps(renames)),
+            encoding="utf-8",
+        )
+    print(f"redirects: wrote {len(OLD_URL_REDIRECTS)} old-site redirect pages", flush=True)
+
+
 def on_post_build(env):
+    write_old_url_redirects(env.conf["site_dir"])
     add_ports_to_search(env.conf["site_dir"])
     add_cache_busting(env.conf["site_dir"])
     if _config_done_time is not None:
