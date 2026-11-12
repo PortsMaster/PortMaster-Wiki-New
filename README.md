@@ -88,6 +88,17 @@ The full list of Markdown extensions is under `markdown_extensions` in
    its URL.
 3. Rebuild and check it.
 
+### The theme pages
+
+**Creating a Theme** and **Theme Reference** (`docs/contribute/gui/creating-a-theme.md`,
+`theme-engine.md`) are copies of `CREATING_A_THEME.md` in PortMaster-Themes and `THEME.md` in
+PortMaster-GUI, where they're written and tested. Change them there, then copy them over with
+their pictures (it fixes the links between them for the wiki):
+
+```bash
+python3 scripts/sync_theme_docs.py --gui ../PortMaster-GUI --themes ../PortMaster-Themes
+```
+
 ### Write a news post
 
 1. Add a Markdown file to `docs/news/posts/`, using an existing post such as

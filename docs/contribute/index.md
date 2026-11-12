@@ -31,7 +31,8 @@ Help bring more games to handheld devices by creating new ports.
 
 Help make PortMaster's interface better and more accessible.
 
-[:material-palette: Customize Themes](gui/theme-engine.md){ .md-button }
+[:material-palette: Create a Theme](gui/creating-a-theme.md){ .md-button }
+[:material-book-open-variant: Theme Reference](gui/theme-engine.md){ .md-button }
 [:material-translate: Add Translations](gui/translation.md){ .md-button }
 
 **What you'll do:**
