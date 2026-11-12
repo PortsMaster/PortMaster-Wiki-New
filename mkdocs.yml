@@ -152,7 +152,8 @@ nav:
               - Love2D: contribute/porting/engines/love2d.md
               - FNA: contribute/porting/engines/fna.md
       - GUI Development:
-          - Themes: contribute/gui/theme-engine.md
+          - Creating a Theme: contribute/gui/creating-a-theme.md
+          - Theme Reference: contribute/gui/theme-engine.md
           - Translation: contribute/gui/translation.md
       - Porter Tools:
           - JSON Generator: tools/json-generator.md
