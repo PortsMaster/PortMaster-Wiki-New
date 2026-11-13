@@ -44,7 +44,7 @@ glightbox: false
 {% set is_mv = 'PortMaster-MV' in (source.url or '') or 'MV-New' in (source.url or '') %}
 {% set repo_owner = 'PortsMaster-MV' if is_mv else 'PortsMaster' %}
 {% set repo_name = 'PortMaster-MV-New' if is_mv else 'PortMaster-New' %}
-  <div class="pm-card" data-port-id="{{ port_id }}" onclick="window.location.href='../port/?name={{ port_id }}'">
+  <a class="pm-card" data-port-id="{{ port_id }}" href="../port/?name={{ port_id | urlencode }}">
     {% if attr.rtr %}<span class="pm-rtr-badge">RTR</span>{% endif %}
     {% if screenshot %}
     <img class="off-glb" src="https://raw.githubusercontent.com/{{ repo_owner }}/{{ repo_name }}/refs/heads/main/ports/{{ port_id }}/{{ screenshot }}"
@@ -72,7 +72,7 @@ glightbox: false
         {{ date_added or '—' }}
       </span>
     </div>
-  </div>
+  </a>
 {% endif %}
 {% endmacro %}
 
@@ -1611,7 +1611,7 @@ glightbox: false
       ? `<span class="card-stat" title="Downloads in the last 7 days"><i class="bi bi-graph-up-arrow"></i> ${port.weeklyDownloads.toLocaleString()} this week</span>`
       : `<span class="card-stat"><i class="bi bi-download"></i> ${downloadsText}</span>`;
     const cls = 'pm-card' + (port.incompatibleFlag ? ' incompatible' : '');
-    return `<div class="${cls}" data-port-id="${port.id}">${rtrBadge}${ownedBadge}${img}<h3>${escapeHtml(port.title)}</h3><div class="card-stats">${downloadStat}<span class="card-stat"><i class="bi bi-calendar-plus"></i> ${port.dateAdded || '—'}</span></div></div>`;
+    return `<a class="${cls}" data-port-id="${port.id}" href="../port/?name=${encodeURIComponent(port.id)}">${rtrBadge}${ownedBadge}${img}<h3>${escapeHtml(port.title)}</h3><div class="card-stats">${downloadStat}<span class="card-stat"><i class="bi bi-calendar-plus"></i> ${port.dateAdded || '—'}</span></div></a>`;
   }
 
   function renderPage(matchedIds, supported = 0, unsupported = 0) {
@@ -1686,21 +1686,10 @@ glightbox: false
   pageNextBtn.addEventListener('click', () => goToPage(currentPage + 1));
   pageLastBtn.addEventListener('click', () => goToPage(Number.MAX_SAFE_INTEGER));
 
-  // ===== Grid click delegation: jump straight to the full /port/ page
-  // (no quick-view modal); middle-click still opens it in a new tab, and
-  // right-click is left to the browser's native context menu. =====
   gameGrid.addEventListener('click', (e) => {
-    const card = e.target.closest('.pm-card');
-    if (!card) return;
-    sessionStorage.setItem('browseScrollY', window.scrollY);
-    window.location.href = `../port/?name=${encodeURIComponent(card.dataset.portId)}`;
-  });
-  gameGrid.addEventListener('auxclick', (e) => {
-    if (e.button !== 1) return;
-    const card = e.target.closest('.pm-card');
-    if (!card) return;
-    e.preventDefault();
-    window.open(`../port/?name=${encodeURIComponent(card.dataset.portId)}`, '_blank');
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const card = e.target.closest('a.pm-card');
+    if (card) sessionStorage.setItem('browseScrollY', window.scrollY);
   });
 
   window.addEventListener('popstate', () => {
