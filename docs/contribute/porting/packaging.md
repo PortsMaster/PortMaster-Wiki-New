@@ -328,3 +328,48 @@ Several things to note here:
   it failed.
 - `install` only runs once. On success a `.installed` file is created, which
   prevents it running again.
+
+## Submitting your port
+
+Once your port is packaged, it goes to PortMaster through a pull request. The
+full repository is large, so use a sparse checkout to download only what you
+need, then test the port and document that testing before the PR is merged.
+
+### Sparse checkout (recommended)
+
+1. Fork the [PortMaster-New](https://github.com/PortsMaster/PortMaster-New)
+   repository. If your port is a Nintendo, Capcom or similar title, or a
+   decompilation, fork the `PortMaster-MV` repository instead.
+2. Download the `pmsetup.sh` script and edit its `REPO` variable so it points to
+   your own fork.
+3. Run it with a branch name, a local folder name and the path of your port:
+
+    ```bash
+    ./pmsetup.sh yourportname yourportname_repo ports/yourportname/
+    ```
+
+    This clones only your port's folder plus `tools/`, `SOURCE_SETUP.txt`,
+    `README.md` and `.gitignore`, and creates a local branch for you. If your
+    port needs a runtime, add the path to the runtime squashfs as an extra
+    argument.
+4. Add your files to `ports/yourportname/`, following the structure of an
+   existing merged port (see [Port structure](#port-structure)).
+5. Commit, push to your fork and open a pull request against the upstream
+   repository.
+
+### Testing thread
+
+Before your PR can be accepted, the port must be tested and the results
+documented:
+
+1. Create a thread for your port in the `#testing-n-dev` channel on the
+   PortMaster Discord.
+2. Test on the major custom firmwares: AmberELEC, dArkOS, muOS, ROCKNIX
+   (with both Libmali and Panfrost; Adreno is optional) and Knulli.
+3. Test at 640x480, which is required. 480x320, 720x720 and higher resolutions
+   such as 1280x720 are optional extras.
+4. Respond to feedback from the community in your testing thread.
+
+!!! warning
+    Pull requests without documented testing in `#testing-n-dev` will not be
+    accepted.
