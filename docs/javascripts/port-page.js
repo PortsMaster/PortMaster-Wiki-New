@@ -167,10 +167,10 @@
       : '';
     const rtr = port.rtr ? '<span class="pm-rtr-badge">RTR</span>' : '';
     const downloads = port.downloads > 0 ? port.downloads.toLocaleString() : '—';
-    return `<div class="pm-card" onclick="window.location.href='../port/?name=${encodeURIComponent(id)}'">`
+    return `<a class="pm-card" href="../port/?name=${encodeURIComponent(id)}">`
       + `${rtr}${img}<h3>${escapeHtml(port.title)}</h3>`
       + `<div class="card-stats"><span class="card-stat"><i class="bi bi-download"></i> ${downloads}</span>`
-      + `<span class="card-stat"><i class="bi bi-calendar-plus"></i> ${port.dateAdded || '—'}</span></div></div>`;
+      + `<span class="card-stat"><i class="bi bi-calendar-plus"></i> ${port.dateAdded || '—'}</span></div></a>`;
   }
 
   // games.md defines its own scrollCarousel() inline; this page doesn't load
