@@ -12,6 +12,9 @@
   // `mkdocs build` writes the finished site into site/; that's what gets served.
   "assets": {
     "directory": "./site",
+    // Lets worker/scheduled.js hand unmatched URLs back to the assets (and
+    // so to the 404 page) instead of failing them.
+    "binding": "ASSETS",
     "not_found_handling": "404-page"
   },
   // Cron that pings the Workers Builds deploy hook: every 12 hours, plus

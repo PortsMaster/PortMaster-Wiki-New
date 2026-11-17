@@ -11,8 +11,14 @@
 //     minutes ago, so a release shows up within ~15 minutes.
 //
 // DEPLOY_HOOK_URL is a Worker *secret* (Settings > Variables and secrets),
-// never committed. Page requests never reach this script: static assets are
-// served before the Worker runs, and unknown URLs get site/404.html.
+// never committed.
+//
+// Page requests are served from site/ before this script runs. But because
+// the Worker has a script, a URL that matches no file (a missing page, or
+// /apple-touch-icon-precomposed.png that iOS asks every site for) is handed to
+// the script instead of straight to not_found_handling. fetch() below exists
+// only to pass those back to the assets, which serve site/404.html with a 404.
+// Without it every such request was a 500 "no fetch() function" exception.
 
 const RELEASE_FEEDS = [
   "https://github.com/PortsMaster/PortMaster-New/releases.atom",
@@ -42,6 +48,16 @@ async function newestRelease(feed) {
 }
 
 export default {
+  async fetch(request, env) {
+    // Static assets only answer GET and HEAD.
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      return new Response("Method Not Allowed", { status: 405, headers: { Allow: "GET, HEAD" } });
+    }
+    // Applies not_found_handling ("404-page"), so this is site/404.html with
+    // a 404 status.
+    return env.ASSETS.fetch(request);
+  },
+
   async scheduled(controller, env, ctx) {
     if (!env.DEPLOY_HOOK_URL) {
       throw new Error("DEPLOY_HOOK_URL secret is not set");
