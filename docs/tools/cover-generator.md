@@ -15,7 +15,7 @@ Build a mixv1 style cover for EmulationStation, in your browser.
 
 Port packages usually include a `cover.png` that shows up in EmulationStation
 and other frontends. This tool builds one for you, using the same mixv1
-layout as [EmulationStation-ImageMaker](https://github.com/JeodC/EmulationStation-Tools){:target="_blank" rel="noopener"}, a tool made by Jeodc. 
+layout as [EmulationStation-ImageMaker](https://github.com/JeodC/EmulationStation-ImageMaker){:target="_blank" rel="noopener"}, a tool made by Jeodc. 
 
 
 ## Pick your images
